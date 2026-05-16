@@ -77,6 +77,15 @@ class QuizResponse(QuizBase):
     class Config:
         from_attributes = True
 
+class QuizSubmission(BaseModel):
+    answers: Dict[str, int]
+
+
+class QuizResult(BaseModel):
+    score: int
+    passed: bool
+    correctAnswers: int
+    totalQuestions: int
 
 # ========== Схемы для Chapter ==========
 class ChapterBase(BaseModel):
@@ -171,18 +180,7 @@ class TaskExecutionResponse(BaseModel):
     test_results: List[TaskTestResultResponse]
     compilation_error: Optional[str] = None
 
-
-class QuizSubmission(BaseModel):
-    answers: Dict[str, int]
-
-
-class QuizResult(BaseModel):
-    score: int
-    passed: bool
-    correctAnswers: int
-    totalQuestions: int
-
-
+# ========== Схемы для кода входа на курс ==========
 class EnrollmentCodeRequest(BaseModel):
     enrollmentCode: str
 

@@ -143,6 +143,7 @@ class UserProgress(Base):
     course_id = Column(String, ForeignKey("courses.id"), nullable=False)
     chapter_id = Column(String, ForeignKey("chapters.id"), nullable=False)
     completed = Column(Boolean, default=False)
+    task_completed = Column(Boolean, default=False)
     quiz_score = Column(Integer, nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
 

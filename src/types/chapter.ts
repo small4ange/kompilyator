@@ -9,7 +9,7 @@ export interface Quiz {
 // Типы для задач
 export interface TaskTest {
   id?: string;
-  input: string;
+  input_data: string;
   expected_output: string;
   isExample?: boolean;
   order?: number;

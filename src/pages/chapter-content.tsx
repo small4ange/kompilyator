@@ -194,16 +194,28 @@ export const ChapterContent: React.FC = () => {
             </CardBody>
             <Divider />
             <CardFooter>
-              <Button
-                as={Link}
-                to={`/courses/${courseId}/chapters/${chapterId}/quiz`}
-                color="secondary"
-                variant="flat"
-                fullWidth
-                startContent={<Icon icon="lucide:check-circle" />}
-              >
-                Начать тестирование
-              </Button>
+              <div className="flex flex-col justify-center items-center gap-2 w-full">
+                <Button
+                  as={Link}
+                  to={`/courses/${courseId}/chapters/${chapterId}/quiz`}
+                  color="secondary"
+                  variant="flat"
+                  fullWidth
+                  startContent={<Icon icon="lucide:check-circle" />}
+                >
+                  Тестирование
+                </Button>
+                <Button
+                  as={Link}
+                  to={`/courses/${courseId}/chapters/${chapterId}/tasks`}
+                  color="success"
+                  variant="flat"
+                  fullWidth
+                  startContent={<Icon icon="lucide:code-2" />}
+                >
+                  Практические задачи
+                </Button>
+              </div>
             </CardFooter>
           </Card>
         </div>

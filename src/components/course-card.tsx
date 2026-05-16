@@ -48,7 +48,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
           fullWidth
           endContent={<Icon icon="lucide:arrow-right" />}
         >
-          {enrolled ? "Отмена" : "Начать"}
+          {enrolled ? "Продолжить" : "Начать"}
         </Button>
       </CardFooter>
     </Card>

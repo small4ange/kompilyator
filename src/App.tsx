@@ -12,6 +12,8 @@ import { ChapterQuiz } from "./pages/chapter-quiz";
 import { AdminDashboard } from "./pages/admin/admin-dashboard";
 import { AdminCourseCreate } from "./pages/admin/admin-course-create";
 import { AdminCourseEdit } from "./pages/admin/admin-course-edit";
+import { TaskExecution } from "./pages/task-execution";
+import { ChapterTasks } from './pages/chapter-tasks';
 
 function App() {
   return (
@@ -24,6 +26,8 @@ function App() {
           <ProtectedRoute exact path="/courses/:courseId" component={CourseDetails} />
           <ProtectedRoute exact path="/courses/:courseId/chapters/:chapterId" component={ChapterContent} />
           <ProtectedRoute exact path="/courses/:courseId/chapters/:chapterId/quiz" component={ChapterQuiz} />
+          <ProtectedRoute exact path="/courses/:courseId/chapters/:chapterId/tasks/:taskId" component={TaskExecution} />
+          <ProtectedRoute exact path="/courses/:courseId/chapters/:chapterId/tasks" component={ChapterTasks} />
           <AdminRoute exact path="/admin" component={AdminDashboard} />
           <AdminRoute exact path="/admin/courses/create" component={AdminCourseCreate} />
           <AdminRoute exact path="/admin/courses/:courseId/edit" component={AdminCourseEdit} />

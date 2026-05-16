@@ -10,7 +10,7 @@ from app.crud.task_crud import TaskCRUD
 router = APIRouter()
 
 
-# ========== АДМИНСКИЕ РОУТЫ ДЛЯ ЗАДАЧ (создание/изменение/удаление) ==========
+# ========== РОУТЫ ДЛЯ ЗАДАЧ (создание/изменение/удаление) ==========
 
 @router.post(
     "/chapters/{chapter_id}/tasks",
@@ -40,7 +40,7 @@ def create_task(
 
 
 @router.put(
-    "/tasks/{task_id}",
+    "/{task_id}",
     response_model=task_schema.TaskResponse
 )
 def update_task(
@@ -63,7 +63,7 @@ def update_task(
 
 
 @router.delete(
-    "/tasks/{task_id}",
+    "/{task_id}",
     status_code=status.HTTP_204_NO_CONTENT
 )
 def delete_task(
@@ -133,7 +133,7 @@ def get_chapter_tasks(
 
 
 @router.get(
-    "/tasks/{task_id}",
+    "/{task_id}",
     response_model=task_schema.TaskResponse
 )
 def get_task(
@@ -142,23 +142,36 @@ def get_task(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_active_user)
 ):
-    """
-    Получить полную информацию о задаче (с тестами).
-    - include_example_only: если True, возвращает только пример теста (для отображения на странице)
-    """
-    #получаем задачу
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+    # ЛОГИРУЕМ
+    print(f"=== GET TASK CALLED ===")
+    print(f"Task ID: {task_id}")
+    print(f"Current user ID: {current_user.id}")
+    print(f"Current user role: {current_user.role}")
+
+    # Получаем задачу
     task = TaskCRUD.get_task_by_id(db, task_id, include_tests=not include_example_only)
+
+    print(f"Task found: {task is not None}")
+    if task:
+        print(f"Task chapter_id: {task.chapter_id}")
+        print(f"Task chapter course_id: {task.chapter.course_id}")
+
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Задача не найдена"
         )
 
-    #проверяем доступ
+    # Проверяем доступ
     enrollment = db.query(models.Enrollment).filter(
         models.Enrollment.user_id == current_user.id,
         models.Enrollment.course_id == task.chapter.course_id
     ).first()
+
+    print(f"Enrollment found: {enrollment is not None}")
 
     if not enrollment and current_user.role != "admin":
         raise HTTPException(
@@ -195,3 +208,112 @@ def get_task(
         created_at=task.created_at,
         updated_at=task.updated_at
     )
+
+@router.post("/{task_id}/execute", response_model=task_schema.TaskExecutionResponse)
+def execute_task(
+        task_id: str,
+        execution_request: task_schema.TaskExecutionRequest,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user)
+):
+    """Выполнить код с тестами (без сохранения)"""
+    from app.services.code_executor import CodeExecutor
+
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    result = CodeExecutor.execute(
+        code=execution_request.code,
+        language=execution_request.language,
+        tests=execution_request.tests
+    )
+
+    return result
+
+
+@router.post("/{task_id}/submit", response_model=task_schema.TaskSubmissionResponse)
+def submit_task(
+        task_id: str,
+        submission: task_schema.TaskSubmissionBase,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_active_user)
+):
+    """Отправить решение (сохраняется в БД)"""
+    from app.services.code_executor import CodeExecutor
+
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    #проверка доступа
+    enrollment = db.query(models.Enrollment).filter(
+        models.Enrollment.user_id == current_user.id,
+        models.Enrollment.course_id == task.chapter.course_id
+    ).first()
+
+    if not enrollment and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="You must be enrolled")
+
+    #выполняем код на всех тестах задачи
+    tests_data = [
+        task_schema.TaskTestCreate(
+            input_data=t.input_data,
+            expected_output=t.expected_output,
+            is_example=t.is_example,
+            order=t.order
+        )
+        for t in task.tests
+    ]
+
+    result = CodeExecutor.execute(
+        code=submission.code,
+        language=submission.language,
+        tests=tests_data
+    )
+
+    #сохранение результата
+    db_submission = models.TaskSubmission(
+        task_id=task_id,
+        user_id=current_user.id,
+        code=submission.code,
+        language=submission.language,
+        passed=result["passed"],
+        tests_passed=result["tests_passed"],
+        total_tests=result["total_tests"],
+        execution_time=result.get("execution_time")
+    )
+    db.add(db_submission)
+
+    #если задача решена - обновление прогресса пользователя
+    if result["passed"]:
+        progress = db.query(models.UserProgress).filter(
+            models.UserProgress.user_id == current_user.id,
+            models.UserProgress.chapter_id == task.chapter_id
+        ).first()
+
+        if progress:
+            progress.task_completed = True
+            progress.completed_at = func.now()
+        else:
+            progress = models.UserProgress(
+                user_id=current_user.id,
+                course_id=task.chapter.course_id,
+                chapter_id=task.chapter_id,
+                task_completed=True,
+                completed_at=func.now()
+            )
+            db.add(progress)
+
+    db.commit()
+
+    return {
+        "id": db_submission.id,
+        "passed": result["passed"],
+        "tests_passed": result["tests_passed"],
+        "total_tests": result["total_tests"],
+        "execution_time": result.get("execution_time"),
+        "submitted_at": db_submission.submitted_at,
+        "test_results": result.get("test_results", [])
+    }
+

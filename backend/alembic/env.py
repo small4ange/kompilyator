@@ -25,7 +25,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 import os
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost/eduplatform"))
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/eduplatform"))
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

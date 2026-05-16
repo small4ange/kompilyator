@@ -28,7 +28,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
   //добавление теста
   const handleAddTest = () => {
     const newTest: TaskTest = {
-      input: "",
+      input_data: "",
       expected_output: "",
       isExample: task.tests.length === 0, //первый тест-пример
       order: task.tests.length
@@ -41,10 +41,10 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
   //обновление теста
   const handleTestChange = (testIndex: number, field: keyof TaskTest, value: string | boolean) => {
-    const updatedTests = [...task.tests];
-    updatedTests[testIndex] = { ...updatedTests[testIndex], [field]: value };
-    onChange(taskIndex, { ...task, tests: updatedTests });
-  };
+  const updatedTests = [...task.tests];
+  updatedTests[testIndex] = { ...updatedTests[testIndex], [field]: value };
+  onChange(taskIndex, { ...task, tests: updatedTests });
+};
 
   //удаление теста
   const handleRemoveTest = (testIndex: number) => {
@@ -189,8 +189,8 @@ export const TaskForm: React.FC<TaskFormProps> = ({
                       <div className="flex-1">
                         <Textarea
                           label="Входные данные"
-                          value={test.input}
-                          onChange={(e) => handleTestChange(testIndex, 'input', e.target.value)}
+                          value={test.input_data}
+                          onChange={(e) => handleTestChange(testIndex, 'input_data', e.target.value)}
                           placeholder={`Пример:
 5
 10`}

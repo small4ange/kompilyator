@@ -65,7 +65,7 @@ export const AdminCourseEdit: React.FC = () => {
                   description: task.description,
                   tests: (task.tests || []).map(test => ({
                     id: test.id,
-                    input: test.input,
+                    input_data: test.input_data,
                     expected_output: test.expected_output,
                     isExample: test.isExample,
                     order: test.order
@@ -175,7 +175,7 @@ export const AdminCourseEdit: React.FC = () => {
             order: task.order || tIndex,
             tests: task.tests.map((test, testIndex) => ({
               id: test.id,
-              input_data: test.input,
+              input_data: test.input_data,
               expected_output: test.expected_output,
               is_example: test.isExample || testIndex === 0,
               order: test.order || testIndex

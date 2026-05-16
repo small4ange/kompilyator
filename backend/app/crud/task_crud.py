@@ -121,21 +121,23 @@ class TaskCRUD:
         return True
 
     @staticmethod
-    def get_task_by_id(
-            db: Session,
-            task_id: str,
-            include_tests: bool = True
-    ) -> Optional[models.Task]:
-        """
-        Получает задачу по ID.
-        Если include_tests=True, загружает также тесты
-        """
+    def get_task_by_id(db: Session, task_id: str, include_tests: bool = True):
+        import logging
+        logging.info(f"=== get_task_by_id ===")
+        logging.info(f"Looking for task_id: '{task_id}'")
+        logging.info(f"Task_id type: {type(task_id)}")
+        logging.info(f"Task_id length: {len(task_id)}")
+
+        all_tasks = db.query(models.Task).all()
+        logging.info(f"Total tasks in DB: {len(all_tasks)}")
+        for t in all_tasks:
+            logging.info(f"  - Task ID: '{t.id}', Title: '{t.title}'")
+
         query = db.query(models.Task).filter(models.Task.id == task_id)
+        task = query.first()
 
-        if include_tests:
-            query = query.options(joinedload(models.Task.tests))
-
-        return query.first()
+        logging.info(f"Query result: {task is not None}")
+        return task
 
     @staticmethod
     def get_tasks_by_chapter(
